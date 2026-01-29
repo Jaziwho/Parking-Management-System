@@ -1,0 +1,47 @@
+﻿#ifndef ROLLBACKMANAGER_H
+#define ROLLBACKMANAGER_H
+
+#include "Zone.h"
+#include "ParkingRequest.h"
+
+struct RollbackAction {
+    int requestId;
+    int zoneId;
+    int slotId;
+    RequestState previousState;
+    RequestState newState;
+    RollbackAction* next;
+};
+
+class RollbackManager {
+private:
+    RollbackAction* stackTop;
+    int stackSize;
+    const int MAX_STACK_SIZE = 100;
+
+    struct HistoryNode {
+        int requestId;
+        bool wasRolledBack;
+        HistoryNode* next;
+        HistoryNode(int reqId) : requestId(reqId), wasRolledBack(false), next(nullptr) {}
+    };
+    HistoryNode* historyFront;
+    HistoryNode* historyRear;
+    int historySize;
+
+public:
+    RollbackManager();
+    ~RollbackManager();
+    void push(const RollbackAction& action);
+    bool pop(RollbackAction& action);
+    bool isEmpty() const;
+    int getStackSize() const;
+    bool rollbackLast(Zone* zones, int zoneCount);
+    bool rollbackK(int k, Zone* zones, int zoneCount);
+    void addToHistory(int requestId);
+    void markAsRolledBack(int requestId);
+    int getRollbackCount() const;
+    void printRecentRollbacks(int count) const;
+};
+
+#endif
